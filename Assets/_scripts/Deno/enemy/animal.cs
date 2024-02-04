@@ -2,124 +2,152 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UIElements;
 
 public enum AnimalState
 {
     Idel,
     Moving,
+    Shooting
 }
 
 [RequireComponent(typeof(NavMeshAgent))]
-public class animal : MonoBehaviour
+public class Animal : MonoBehaviour
 {
     [Header("Wonder")]
-   [SerializeField] private float wanderDistance = 5f;
-   [SerializeField ]private float walkSpeed = 5f;
-    [SerializeField] private float MaxwalkTime = 6f;
+    [SerializeField] private float wanderDistance = 5f;
+    [SerializeField] private float walkSpeed = 5f;
+    [SerializeField] private float maxWalkTime = 6f;
 
     [Header("Walk")]
-    [SerializeField]
-    private float idleTime = 1f;
+    [SerializeField] private float idleTime = 1f;
 
-    protected NavMeshAgent navaget;
-    protected AnimalState Current_state= AnimalState.Idel;
+    protected NavMeshAgent navAgent;
+    protected AnimalState currentState = AnimalState.Idel;
+
+    [Header("Shooting")]
+    [SerializeField] private GameObject player;
+    [SerializeField] private float minDistanceForShoot = 5f;
+    public static bool isShooting = false;
 
     private void Start()
     {
-        initializeAnimal();
+        InitializeAnimal();
+        
     }
 
-    protected virtual void initializeAnimal()
+    private void Update()
     {
-       
-        navaget = GetComponent<NavMeshAgent>();
-        navaget.speed = walkSpeed;
+        Vector3 distance = transform.position - player.transform.position;
 
-        Current_state = AnimalState.Idel;
-        updateState();
+        if (distance.x < minDistanceForShoot || distance.z < minDistanceForShoot)
+        {
+            isShooting = true;
+        }
+
+        if (isShooting)
+        {
+            SetState(AnimalState.Shooting);
+        }
+
+       // Debug.Log(currentState);
     }
 
-    protected virtual void updateState()
+    protected virtual void InitializeAnimal()
     {
-        switch (Current_state)
+        navAgent = GetComponent<NavMeshAgent>();
+        navAgent.speed = walkSpeed;
+
+        currentState = AnimalState.Idel;
+        UpdateState();
+    }
+
+    protected virtual void UpdateState()
+    {
+        switch (currentState)
         {
             case AnimalState.Idel:
-                handleIdleState();
+                HandleIdleState();
                 break;
             case AnimalState.Moving:
-                handleMovingState();
+                HandleMovingState();
+                break;
+            case AnimalState.Shooting:
+                HandleShootingState();
                 break;
         }
     }
 
-    protected Vector3  GetRandomhandlepostition(Vector3 origine,float distance)
+    protected Vector3 GetRandomHandlePosition(Vector3 origin, float distance)
     {
         Vector3 randomDirection = UnityEngine.Random.insideUnitSphere * distance;
-        randomDirection += origine;
-        NavMeshHit _navemeshHit;
-        
-        if (NavMesh.SamplePosition(randomDirection,out _navemeshHit,distance,NavMesh.AllAreas)){
-             return _navemeshHit.position;
+        randomDirection += origin;
+        NavMeshHit navMeshHit;
+
+        if (NavMesh.SamplePosition(randomDirection, out navMeshHit, distance, NavMesh.AllAreas))
+        {
+            return navMeshHit.position;
         }
         else
         {
-         return GetRandomhandlepostition(origine,distance);
+            return GetRandomHandlePosition(origin, distance);
         }
-        
     }
 
-    protected virtual void handleMovingState()
+    protected virtual void HandleMovingState()
     {
-        StartCoroutine(waitToDistaination());
+        StartCoroutine(WaitToDestination());
     }
 
-    private IEnumerator waitToMove()
+    private IEnumerator WaitToMove()
     {
-       
-        float waitTime =UnityEngine.Random.Range(idleTime/2, idleTime*2);
+        float waitTime = UnityEngine.Random.Range(idleTime / 2, idleTime * 2);
         yield return new WaitForSeconds(waitTime);
 
-        Vector3 randomDestination = GetRandomhandlepostition(transform.position, wanderDistance);
-        navaget.SetDestination(randomDestination);
-        setState(AnimalState.Moving);
-      
+        Vector3 randomDestination = GetRandomHandlePosition(transform.position, wanderDistance);
+        navAgent.SetDestination(randomDestination);
+        SetState(AnimalState.Moving);
     }
 
-    protected virtual void handleIdleState()
+    protected virtual void HandleIdleState()
     {
-        StartCoroutine(waitToMove());
+        StartCoroutine(WaitToMove());
     }
 
-    private IEnumerator waitToDistaination()
+    private IEnumerator WaitToDestination()
     {
         float startTime = Time.time;
-        while(navaget.remainingDistance>navaget.stoppingDistance)
+        while (navAgent.remainingDistance > navAgent.stoppingDistance)
         {
-            if(Time.time-startTime>= MaxwalkTime)
+            if (Time.time - startTime >= maxWalkTime)
             {
-                navaget.ResetPath();
-                setState(AnimalState.Idel);
+                navAgent.ResetPath();
+                SetState(AnimalState.Idel);
                 yield break;
             }
             yield return null;
         }
-        
-        //destination has been reached
-        setState(AnimalState.Idel);
+
+        // Destination has been reached
+        SetState(AnimalState.Idel);
     }
 
-    protected void setState(AnimalState newState)
+    private void HandleShootingState()
     {
-        if(Current_state==newState) return;
-
-        Current_state = newState;
-        onstateChange(newState);
+        Vector3 updatePos = player.transform.position;
+        updatePos  = new Vector3(transform.position.x-3, transform.position.y, transform.position.z-3);
+        navAgent.SetDestination(player.transform.position);
     }
 
-    protected virtual void onstateChange(AnimalState newState)
+    protected void SetState(AnimalState newState)
     {
-        updateState();
+        if (currentState == newState) return;
+
+        currentState = newState;
+        OnStateChange(newState);
+    }
+
+    protected virtual void OnStateChange(AnimalState newState)
+    {
+        UpdateState();
     }
 }
-
