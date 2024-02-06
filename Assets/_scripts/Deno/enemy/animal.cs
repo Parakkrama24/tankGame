@@ -134,8 +134,8 @@ public class Animal : MonoBehaviour
     private void HandleShootingState()
     {
         Vector3 updatePos = player.transform.position;
-        updatePos  = new Vector3(transform.position.x-3, transform.position.y, transform.position.z-3);
-        navAgent.SetDestination(player.transform.position);
+        updatePos  = new Vector3(updatePos.x-3, updatePos.y,updatePos.z-3);
+        navAgent.SetDestination(updatePos);
     }
 
     protected void SetState(AnimalState newState)

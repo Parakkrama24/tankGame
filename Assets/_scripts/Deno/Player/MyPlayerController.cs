@@ -20,7 +20,7 @@ public class MyPlayerController : MonoBehaviour
 
         // Calculate move direction based on player's local forward direction
         Vector3 moveDirection = transform.forward * verticalInput + transform.right * horizontalInput;
-       // moveDirection = moveDirection.normalized;
+        moveDirection = moveDirection.normalized;
 
         Vector3 movement = moveDirection * speed * Time.deltaTime;
 
