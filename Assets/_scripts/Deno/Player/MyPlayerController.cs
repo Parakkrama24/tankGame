@@ -1,8 +1,11 @@
+using CustomInspector;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 public class MyPlayerController : MonoBehaviour
 {
+    [HorizontalLine("Parametres")]
+
     [SerializeField] private float speed = 5f;
     [SerializeField] private float rotationSpeed = 10f;
 
