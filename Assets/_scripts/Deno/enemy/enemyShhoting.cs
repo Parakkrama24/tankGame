@@ -5,6 +5,7 @@ using UnityEngine;
 public class enemyShhoting : MonoBehaviour
 {
     private Transform PlayerTransform;
+    
    
     void Start()
     {
@@ -31,5 +32,10 @@ public class enemyShhoting : MonoBehaviour
             // Apply the rotation to object1
             gameObject.transform.rotation = rotation;
         }
+    }
+
+    private void shoot()
+    {
+
     }
 }
